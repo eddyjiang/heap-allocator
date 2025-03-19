@@ -1,7 +1,6 @@
 /* Handles low-level storage underneath the heap allocator. It reserves
  * the large memory segment using the OS-level mmap facility.
  */
-
 #include "segment.h"
 #include <assert.h>
 #include <sys/mman.h>
