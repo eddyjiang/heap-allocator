@@ -3,7 +3,6 @@
  * running under debugger, breakpoint() is a no-op. Call this
  * function in validate_heap() to break when an error is detected.
  */
-
 #ifndef DEBUG_BREAK_H
 #define DEBUG_BREAK_H
 
