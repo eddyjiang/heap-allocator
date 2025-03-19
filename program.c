@@ -3,7 +3,6 @@
  * using mymalloc, myrealloc, and myfree instead of malloc, realloc,
  * and free.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "allocator.h"
