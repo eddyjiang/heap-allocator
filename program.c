@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Write code here!
+    // write code here
     
     return 0;
 }
