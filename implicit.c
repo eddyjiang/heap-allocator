@@ -155,8 +155,8 @@ void *myrealloc(void *old_ptr, size_t new_size) {
  * Returns true if all is ok, or false otherwise.
  * This function is called periodically by the test
  * harness to check the state of the heap allocator.
- * can also use the breakpoint() function to stop
- * in the debugger - e.g. if (something_is_wrong) breakpoint();
+ * Uses the breakpoint() function to stop
+ * in the debugger.
  */
 bool validate_heap() {
     void *cur = segment_start;
