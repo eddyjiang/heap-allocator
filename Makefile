@@ -1,7 +1,6 @@
 # A simple makefile for building a program composed of C source files.
 
 # gcc optimization flags
-bump.o: CFLAGS += -Og
 implicit.o: CFLAGS += -O2
 explicit.o: CFLAGS += -O2
 
@@ -9,10 +8,7 @@ ALLOCATORS = bump implicit explicit
 PROGRAMS = $(ALLOCATORS:%=test_%)
 MY_PROGRAMS = $(ALLOCATORS:%=my_optional_program_%)
 
-# This auto-commits changes on a successful make and if the tool_run environment variable is not set (it is set
-# by tools like sanitycheck, which run make on the student's behalf, and which already commmit).
-# The very long piped git command is a hack to get the "tools git username" used
-# when we make the project, and use that same git username when committing here.
+# This auto-commits changes on a successful make and if the tool_run environment variable is not set.
 all:: $(PROGRAMS) $(MY_PROGRAMS)
 	@retval=$$?;\
 	if [ -z "$$tool_run" ]; then\
