@@ -1,9 +1,9 @@
 /* Explicit.c is my own explicit heap allocator that builds on what I
-learned from writing the implicit version. I have developed a
-high-performance heap allocator that adds an explicit free list as
-specified in class and in the textbook and includes support for coalescing
-and in-place realloc. Please enjoy!
-*/
+ * learned from writing the implicit version. I have developed a
+ * high-performance heap allocator that adds an explicit free list as
+ * specified in class and in the textbook and includes support for coalescing
+ * and in-place realloc. Please enjoy!
+ */
 #include "./allocator.h"
 #include "./debug_break.h"
 #include <string.h>
@@ -19,16 +19,16 @@ void **get_prev_free(void *ptr);
 void dump_heap();
 
 /* This must be called by a client before making any allocation
-requests.  The function returns true if initialization was
-successful, or false otherwise. The myinit function can be
-called to reset the heap to an empty state. When running
-against a set of of test scripts, our test harness calls
-myinit before starting each new script.
-*/
+ * requests. The function returns true if initialization was
+ * successful, or false otherwise. The myinit function can be
+ * called to reset the heap to an empty state. When running
+ * against a set of of test scripts, our test harness calls
+ * myinit before starting each new script.
+ */
 bool myinit(void *heap_start, size_t heap_size) {
     segment_start = heap_start;
     if (heap_size < 3 * ALIGNMENT) {
-        return false;  // no room for a header and its smallest block
+        return false; // no room for a header and its smallest block
     }
     segment_size = heap_size;
     *(size_t *)segment_start = (segment_size - ALIGNMENT);
@@ -41,11 +41,11 @@ bool myinit(void *heap_start, size_t heap_size) {
     return true;
 }
 
-/* helper: rounds up size_t size to the given multiple, which must be a
-power of 2, and returns the result. Must also be at least 2 * ALIGNMENT,
-or 16 bytes to be able to store prev and next pointers for the doubly
-linked list of free blocks as a free block.
-*/
+/* Helper: Rounds up size_t size to the given multiple, which must be a
+ * power of 2, and returns the result. Must also be at least 2 * ALIGNMENT,
+ * or 16 bytes to be able to store prev and next pointers for the doubly
+ * linked list of free blocks as a free block.
+ */
 size_t roundup(size_t size, size_t multiple) {
     size_t rounded = (size + multiple - 1) & ~(multiple - 1);
     if (rounded < 2 * ALIGNMENT) {
@@ -54,62 +54,62 @@ size_t roundup(size_t size, size_t multiple) {
     return rounded;
 }
 
-/* helper: takes in a ptr to a header and looks at its last bit to
-determine if it is used or free
-*/
+/* Helper: Takes in a ptr to a header and looks at its last bit to
+ * determine if it is used or free.
+ */
 bool is_used(void *ptr) {
     return *(size_t *)ptr & 1; // returns last bit, 0 = free, 1 = used
 }
 
-/* helper: takes in a ptr to a header and returns the size_t given by
-the header without considering its last bit
-*/
+/* Helper: Takes in a ptr to a header and returns the size_t given by
+ * the header without considering its last bit.
+ */
 size_t get_size(void *ptr) {
     return *(size_t *)ptr & ~1; // returns with last bit to 0
 }
 
-/* helper: takes in a pointer to some memory location on the heap and
-determines if it is beyond the allocated heap
-*/
+/* Helper: Takes in a pointer to some memory location on the heap and
+ * determines if it is beyond the allocated heap.
+ */
 bool is_past_end(void *ptr) {
     return (char *)ptr >= (char *)segment_start + segment_size;
 }
 
-/* helper: takes in a block of memory on the heap and returns its
-header
-*/
+/* Helper: Takes in a block of memory on the heap and returns its
+ * header.
+ */
 void *get_header(void *ptr) {
     return (char *)ptr - ALIGNMENT;
 }
 
-/* takes in a ptr to a header and returns the next header by looking at
-the size of the block specified by the header and traversing that
-many bytes past the header
-*/
+/* Helper: Takes in a ptr to a header and returns the next header by looking at
+ * the size of the block specified by the header and traversing that
+ * many bytes past the header.
+ */
 void *get_next_header(void *ptr) {
     return (char *)ptr + get_size(ptr) + ALIGNMENT;
 }
 
-/* takes in a ptr to the header of a free block and returns the address
-of the next free block header using the doubly linked list as stored
-in the "contents" of the free block.
+/* Helper: Takes in a ptr to the header of a free block and returns the address
+ * of the next free block header using the doubly linked list as stored
+ * in the "contents" of the free block.
  */
 void **get_next_free(void *ptr) {
     return (void **)((char *)ptr + 2 * ALIGNMENT);
 }
 
-/* takes in a ptr to the header of a free block and returns the address
-of the previous free block header using the doubly linked list as stored
-in the "contents" of the free block.
+/* Helper: Takes in a ptr to the header of a free block and returns the address
+ * of the previous free block header using the doubly linked list as stored
+ * in the "contents" of the free block.
  */
 void **get_prev_free(void *ptr) {
     return (void **)((char *)ptr + ALIGNMENT);
 }
 
-/* takes in a ptr to the header of a previously free block (now used) and
-updates the doubly linked list of free blocks accordingly to account for
-its absence in the list now. Rearranges the linked list around the
-previously free block.
+/* Helper: Takes in a ptr to the header of a previously free block (now used) and
+ * updates the doubly linked list of free blocks accordingly to account for
+ * its absence in the list now. Rearranges the linked list around the
+ * previously free block.
  */
 void remove_free(void *ptr) {
     void *prev = *get_prev_free(ptr);
@@ -125,9 +125,9 @@ void remove_free(void *ptr) {
     }
 }
 
-/* takes in a ptr to a just-freed block and uses last-in first-out principle
-to add the newly freed block to the start of the linked list.
-*/
+/* Helper: Takes in a ptr to a just-freed block and uses last-in first-out principle
+ * to add the newly freed block to the start of the linked list.
+ */
 void add_free(void *ptr) {
     *get_prev_free(ptr) = NULL;
     *get_next_free(ptr) = free_start;
@@ -137,25 +137,25 @@ void add_free(void *ptr) {
     free_start = ptr;
 }
 
-/* takes in a ptr to a header and manipulates its bit pattern to
-reflect that the block is now used.
-*/
+/* Helper: Takes in a ptr to a header and manipulates its bit pattern to
+ * reflect that the block is now used.
+ */
 void set_used(void *ptr) {
     *(size_t *)ptr |= 1; // sets last bit to 1
 }
 
-/* takes in a ptr to a header and manipulates its bit pattern to
-reflect that the block is now free.
-*/
+/* Helper: Takes in a ptr to a header and manipulates its bit pattern to
+ * reflect that the block is now free.
+ */
 void set_free(void *ptr) {
     *(size_t *)ptr &= ~1; // sets last bit to 0
 }
 
 /* Returns the first fit free block for the requested_size by traversing
-the doubly linked list of free blocks on the heap and returning the first
-free block with enough space. If the requested_size is 0 or greater than
-the MAX_REQUEST_SIZE, mymalloc returns NULL.
-*/
+ * the doubly linked list of free blocks on the heap and returning the first
+ * free block with enough space. If the requested_size is 0 or greater than
+ * the MAX_REQUEST_SIZE, mymalloc returns NULL.
+ */
 void *mymalloc(size_t requested_size) {
     if (requested_size == 0 || requested_size > MAX_REQUEST_SIZE) {
         return NULL;
@@ -189,11 +189,11 @@ void *mymalloc(size_t requested_size) {
     return ptr;
 }
 
-/* accepts a ptr to some used block of memory on the heap and manipulates
-its header accordingly to reflect that it is free. Also, coalesces the
-neighboring block to its right if it is free and removes that block from
-the doubly linked list. Does not zero out "freed" memory
-*/
+/* Accepts a ptr to some used block of memory on the heap and manipulates
+ * its header accordingly to reflect that it is free. Also, coalesces the
+ * neighboring block to its right if it is free and removes that block from
+ * the doubly linked list. Does not zero out "freed" memory.
+ */
 void myfree(void *ptr) {
     if (ptr != NULL) {
         void *header = get_header(ptr);
@@ -211,18 +211,18 @@ void myfree(void *ptr) {
     }
 }
 
-/* accepts an old_ptr to some used block of memory on the heap.
-If old_ptr is NULL, acts same as mymalloc. If new_size is 0, acts same as
-myfree. Case 1: If new_size requested is less than or equal to the current
-old_size, implements in-place realloc successfully, as well as recycling
-any previously used space large enough into another free block. Case 2: If
-new_size requested is greater than the current old_size, coalesces all
-consecutive free neighboring blocks to its right until it is large enough
-to satisfy the requested new_size (in which case it calls one recursive
-call of myrealloc that satisfies case 1), or there are no more free blocks
-to the right to coalesce. In this case 3, it uses mymalloc, memcpy, and
-myfree as in the implicit allocator.
-*/
+/* Accepts an old_ptr to some used block of memory on the heap.
+ * If old_ptr is NULL, acts same as mymalloc. If new_size is 0, acts same as
+ * myfree. Case 1: If new_size requested is less than or equal to the current
+ * old_size, implements in-place realloc successfully, as well as recycling
+ * any previously used space large enough into another free block. Case 2: If
+ * new_size requested is greater than the current old_size, coalesces all
+ * consecutive free neighboring blocks to its right until it is large enough
+ * to satisfy the requested new_size (in which case it calls one recursive
+ * call of myrealloc that satisfies case 1), or there are no more free blocks
+ * to the right to coalesce. In this case 3, it uses mymalloc, memcpy, and
+ * myfree as in the implicit allocator.
+ */
 void *myrealloc(void *old_ptr, size_t new_size) {
     if (old_ptr == NULL) {
         return mymalloc(new_size); // acts same as mymalloc
@@ -269,13 +269,13 @@ void *myrealloc(void *old_ptr, size_t new_size) {
     return new_ptr;
 }
 
-/* checks internal structures.
-Returns true if all is ok, or false otherwise.
-This function is called periodically by the test
-harness to check the state of the heap allocator.
-can also use the breakpoint() function to stop
-in the debugger - e.g. if (something_is_wrong) breakpoint();
-*/
+/* validate_heap checks internal structures.
+ * Returns true if all is ok, or false otherwise.
+ * This function is called periodically by the test
+ * harness to check the state of the heap allocator.
+ * can also use the breakpoint() function to stop
+ * in the debugger - e.g. if (something_is_wrong) breakpoint();
+ */
 bool validate_heap() {
     void *cur = segment_start;
     size_t total_size = 0; // counts header and block sizes together
@@ -329,11 +329,9 @@ bool validate_heap() {
     return true;
 }
 
-/* Function: dump_heap
- * -------------------
- * This function prints out the the block contents of the heap.  It is not
+/* dump_heap prints out the the block contents of the heap. It is not
  * called anywhere, but is a useful helper function to call from gdb when
- * tracing through programs.  It prints out the total range of the heap, and
+ * tracing through programs. It prints out the total range of the heap, and
  * information about each block within it.
  */
 void dump_heap() {
